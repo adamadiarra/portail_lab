@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portail des labs</title>
+<style>
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1c2733;--muted:#667487;--line:#dce2ea;--accent:#1a5fb4;--on:#fff;--ok:#1e8e4e;--bad:#c0392b;--warn:#b9770e;--input:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#12161c;--card:#1b222b;--ink:#e6ebf1;--muted:#8d9bab;--line:#2b3542;--accent:#5b9bf0;--on:#0b1118;--ok:#4cc784;--bad:#ef7a6b;--warn:#e0a948;--input:#141a21}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line);flex-wrap:wrap}
+h1{font-size:18px;margin:0}h2{font-size:17px;margin:0 0 12px}h3{font-size:13px;margin:22px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sp{flex:1}nav{display:flex;gap:4px;padding:0 20px;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{border:0;background:none;color:var(--muted);padding:11px 14px;font:inherit;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+nav button.on{color:var(--ink);font-weight:600;border-color:var(--accent)}
+main{max-width:1000px;margin:0 auto;padding:20px 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card.mine{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
+.muted{color:var(--muted)}.small{font-size:13px}
+button.b,a.b{display:inline-block;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;text-decoration:none}
+button.p,a.p{background:var(--accent);color:var(--on);border-color:var(--accent)}button.d{color:var(--bad)}button:disabled{opacity:.5;cursor:not-allowed}
+input,textarea,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--input);color:var(--ink);font:inherit}
+label{display:block;margin:10px 0 4px;font-size:13px;color:var(--muted)}label.c{display:flex;gap:8px;align-items:center}label.c input{width:auto}
+.auth{max-width:380px;margin:50px auto}.tabs2{display:flex;gap:8px;margin-bottom:12px}
+.msg{margin:10px 0;padding:9px 12px;border-radius:8px;font-size:14px}.msg.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.msg.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line)}.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.full{color:var(--bad);border-color:var(--bad)}
+.bar{height:6px;background:var(--line);border-radius:4px;margin:10px 0}.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+pre.ins{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:12px 0}.kv b{color:var(--muted);font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.two{grid-template-columns:1fr}}
+</style></head><body>
+<div id="app"></div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path, body) {
+  const o = body === undefined ? {} : {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)};
+  const r = await fetch(path, o); const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || 'Erreur ' + r.status); e.status = r.status; throw e; }
+  return j;
+}
+let me = null, view = 'labs', flash = null;
+const setFlash = (t, kind = 'ok') => { flash = {t, kind}; };
+const flashHtml = () => { if (!flash) return ''; const f = flash; flash = null; return `<div class="msg ${f.kind}">${esc(f.t)}</div>`; };
+async function act(fn, okMsg) { try { await fn(); if (okMsg) setFlash(okMsg); } catch (e) { if (e.status === 401) me = null; else setFlash(e.message, 'err'); } render(); }
+
+async function boot() { me = (await api('/api/me')).user; render(); }
+async function render() {
+  const app = $('#app');
+  if (!me) return renderAuth(app);
+  const tabs = [['labs', 'Labs'], ['mylab', 'Mon lab']].concat(me.role === 'admin' ? [['admin', 'Administration']] : []);
+  app.innerHTML = `<header><h1>Portail des labs</h1><div class="sp"></div><span class="muted small">${esc(me.display_name)}${me.role === 'admin' ? ' (admin)' : ''}</span>
+    <button class="b" id="pwbtn">Mot de passe</button><button class="b" id="logout">Déconnexion</button></header>
+    <nav>${tabs.map(([k, l]) => `<button data-v="${k}" class="${view === k ? 'on' : ''}">${l}</button>`).join('')}</nav><main id="main"></main>`;
+  app.querySelectorAll('nav button').forEach(b => b.onclick = () => { view = b.dataset.v; render(); });
+  $('#logout').onclick = () => act(async () => { await api('/api/logout', {}); me = null; });
+  $('#pwbtn').onclick = changePw;
+  const m = $('#main');
+  try { if (view === 'labs') await viewLabs(m); else if (view === 'mylab') await viewMyLab(m); else await viewAdmin(m); }
+  catch (e) { if (e.status === 401) { me = null; render(); } else m.innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+}
+function changePw() {
+  const old = prompt('Ancien mot de passe :'); if (old === null) return;
+  const nw = prompt('Nouveau mot de passe (8 caractères minimum) :'); if (nw === null) return;
+  act(() => api('/api/password', {old, new: nw}), 'Mot de passe modifié');
+}
+function renderAuth(app) {
+  const reg = app.dataset.mode === 'reg';
+  app.innerHTML = `<div class="auth card"><h2>Portail des labs</h2>
+    <div class="tabs2"><button class="b ${!reg ? 'p' : ''}" id="t-log">Connexion</button><button class="b ${reg ? 'p' : ''}" id="t-reg">Inscription</button></div>
+    <div id="amsg">${flashHtml()}</div>
+    <form id="f"><label>Identifiant</label><input name="username" autocomplete="username" required>
+    ${reg ? '<label>Nom affiché (facultatif)</label><input name="display_name">' : ''}
+    <label>Mot de passe${reg ? ' (8 caractères minimum)' : ''}</label><input type="password" name="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required>
+    ${reg ? '<label>Code d\'invitation</label><input name="invite" autocomplete="off">' : ''}
+    <div style="margin-top:14px"><button class="b p" style="width:100%">${reg ? 'Créer mon compte' : 'Se connecter'}</button></div></form></div>`;
+  $('#t-log').onclick = () => { app.dataset.mode = ''; renderAuth(app); };
+  $('#t-reg').onclick = () => { app.dataset.mode = 'reg'; renderAuth(app); };
+  $('#f').onsubmit = async ev => {
+    ev.preventDefault(); const d = Object.fromEntries(new FormData(ev.target));
+    try { await api(reg ? '/api/register' : '/api/login', d); me = (await api('/api/me')).user; view = 'labs'; render(); }
+    catch (e) { $('#amsg').innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  };
+}
+async function viewLabs(m) {
+  const r = await api('/api/labs'), enrolled = r.enrolled_lab_id;
+  m.innerHTML = flashHtml() + `<h2>Labs disponibles</h2>
+    ${enrolled ? '<div class="msg ok">Vous êtes inscrit à un lab. Pour en choisir un autre, quittez d\'abord le vôtre.</div>' : '<p class="muted">Vous ne pouvez être inscrit qu\'à <b>un seul lab à la fois</b>.</p>'}
+    <div class="grid">${r.labs.map(l => `<div class="card ${l.mine ? 'mine' : ''}"><div class="row"><b>${esc(l.title)}</b><span class="sp"></span>
+      <span class="badge ${l.free ? 'ok' : 'full'}">${l.free ? l.free + ' place' + (l.free > 1 ? 's' : '') : 'Complet'}</span></div>
+      <p class="muted small">${esc(l.description) || 'Pas de description.'}</p>
+      <div class="bar"><i style="width:${Math.round(100 * l.taken / l.capacity)}%"></i></div><div class="small muted">${l.taken} / ${l.capacity} inscrits</div>
+      <div style="margin-top:12px">${l.mine ? `<button class="b p" data-go>Accéder à mon lab</button> <button class="b d" data-leave>Quitter</button>`
+        : `<button class="b p" data-enroll="${l.id}" ${enrolled || !l.free ? 'disabled' : ''}>S'inscrire</button>`}</div></div>`).join('') || '<p class="muted">Aucun lab pour le moment.</p>'}</div>`;
+  m.querySelectorAll('[data-enroll]').forEach(b => b.onclick = () => act(async () => { await api('/api/enroll', {lab_id: Number(b.dataset.enroll)}); view = 'mylab'; }, 'Inscription enregistrée'));
+  m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { view = 'mylab'; render(); });
+  m.querySelectorAll('[data-leave]').forEach(b => b.onclick = () => { if (confirm('Quitter ce lab ? Votre place sera libérée.')) act(() => api('/api/unenroll', {}), 'Vous avez quitté le lab'); });
+}
+async function viewMyLab(m) {
+  const l = (await api('/api/my-lab')).lab;
+  if (!l) { m.innerHTML = flashHtml() + `<div class="card"><h2>Mon lab</h2><p class="muted">Vous n'êtes inscrit à aucun lab.</p><button class="b p" id="gl">Voir les labs</button></div>`; $('#gl').onclick = () => { view = 'labs'; render(); }; return; }
+  const link = /^https?:\/\//.test(l.access_url) ? `<a class="b p" href="${esc(l.access_url)}" target="_blank" rel="noopener noreferrer">Ouvrir le lab ↗</a>` : '';
+  m.innerHTML = flashHtml() + `<div class="card"><div class="row"><h2 style="margin:0">${esc(l.title)}</h2><span class="sp"></span><span class="badge ok">Inscrit</span></div>
+    <p class="muted">${esc(l.description)}</p>
+    <div class="kv"><b>Votre place</b><span>n° ${l.slot}</span>${l.host ? `<b>Hôte</b><span><code>${esc(l.host)}</code></span>` : ''}
+    ${l.managed ? `<b>État</b><span><span class="badge ${l.status === 'running' ? 'ok' : l.status === 'starting' ? '' : 'full'}">${STATUS[l.status] || esc(l.status)}</span>${l.detail ? ` <span class="muted small">${esc(l.detail)}</span>` : ''}</span>` : ''}
+    ${l.ports.map(p => `<b>Port${p.name ? ' ' + esc(p.name) : ''}</b><span><code>${p.port}</code></span>`).join('')}${l.access_url ? `<b>Adresse</b><span><code>${esc(l.access_url)}</code></span>` : ''}</div>
+    <div class="row">${l.status === 'running' || !l.managed ? link : ''}${l.managed ? '<button class="b" id="restart">Redémarrer mon lab</button>' : ''}<button class="b d" id="leave">Quitter ce lab</button></div>
+    ${l.instructions ? `<h3>Instructions</h3><pre class="ins">${esc(l.instructions)}</pre>` : ''}</div>`;
+  if ($('#restart')) $('#restart').onclick = () => act(() => api('/api/my-lab/restart', {}), 'Redémarrage en cours…');
+  if (l.status === 'starting') setTimeout(() => { if (view === 'mylab' && me) render(); }, 2000);
+  $('#leave').onclick = () => { if (confirm('Quitter ce lab ? Votre place sera libérée.')) act(async () => { await api('/api/unenroll', {}); view = 'labs'; }, 'Vous avez quitté le lab'); };
+}
+const STATUS = {starting: 'Démarrage…', running: 'En marche', error: 'Erreur', stopped: 'Arrêté', none: ''};
+let editing = null;
+async function viewAdmin(m) {
+  const [L, U] = await Promise.all([api('/api/admin/labs'), api('/api/admin/users')]);
+  const e = editing || {id: '', title: '', description: '', instructions: '', capacity: 20, access_url: '', host: '', port_base: 0, active: true, image: '', ports: '', env: '', memory_mb: 256, cpus: 0.5};
+  m.innerHTML = flashHtml() + `<h2>Labs</h2><table><tr><th>Lab</th><th>Inscrits</th><th>Actif</th><th></th></tr>
+    ${L.labs.map(l => `<tr><td>${esc(l.title)}</td><td>${l.taken}/${l.capacity}</td><td>${l.active ? 'oui' : 'non'}</td>
+      <td class="row"><button class="b" data-edit="${l.id}">Modifier</button><button class="b d" data-del="${l.id}">Supprimer</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">Aucun lab.</td></tr>'}</table>
+    <h3>${e.id ? 'Modifier le lab' : 'Nouveau lab'}</h3><form class="card" id="lf"><div class="two"><div><label>Titre</label><input name="title" value="${esc(e.title)}" required></div>
+    <div><label>Capacité (places)</label><input type="number" name="capacity" min="1" max="500" value="${e.capacity}"></div></div>
+    <label>Description</label><textarea name="description" rows="2">${esc(e.description)}</textarea>
+    <div class="two"><div><label>Hôte (affiché à l'étudiant)</label><input name="host" value="${esc(e.host)}" placeholder="ex. labs.mondomaine.com"></div>
+    <div><label>Port de base</label><input type="number" name="port_base" min="0" max="65000" value="${e.port_base}"></div></div>
+    <h3 style="margin-top:16px">Conteneur par étudiant (facultatif — laisser l'image vide pour un accès manuel)${U.docker ? '' : ' <span class="badge full">Docker inaccessible</span>'}</h3>
+    <div class="two"><div><label>Image Docker</label><input name="image" value="${esc(e.image)}" placeholder="ghcr.io/adamadiarra/simulateur-solaire:latest"></div>
+    <div><label>Ports du conteneur (nom:port, séparés par des virgules)</label><input name="ports" value="${esc(e.ports)}" placeholder="web:8080,modbus:5020"></div></div>
+    <div class="two"><div><label>Mémoire max (Mo)</label><input type="number" name="memory_mb" min="32" max="8192" value="${e.memory_mb}"></div>
+    <div><label>CPU max</label><input type="number" step="0.1" name="cpus" min="0.1" max="4" value="${e.cpus}"></div></div>
+    <label>Variables d'environnement (une par ligne : CLE=valeur ; {user} {slot} utilisables)</label><textarea name="env" rows="2">${esc(e.env)}</textarea>
+    <p class="muted small">Port hôte de chaque port = <b>port de base + 1000 × rang + n° de place</b> (ex. base 8000, place 3 : web → 8003, modbus → 9003). Variables : <code>{port_web}</code>, <code>{port_modbus}</code>, <code>{port}</code> (= le premier).</p>
+    <label>Adresse d'accès (URL, facultatif)</label><input name="access_url" value="${esc(e.access_url)}" placeholder="http://labs.mondomaine.com:{port_web}">
+    <label>Instructions (variables : {user} {slot} {port} {port_nom})</label><textarea name="instructions" rows="6">${esc(e.instructions)}</textarea>
+    <label class="c"><input type="checkbox" name="active" ${e.active ? 'checked' : ''}> Visible par les étudiants</label>
+    <div class="row" style="margin-top:12px"><button class="b p">${e.id ? 'Enregistrer' : 'Créer le lab'}</button>${e.id ? '<button type="button" class="b" id="cancel">Annuler</button>' : ''}</div></form>
+    <h3>Code d'invitation</h3><div class="row"><input id="inv" style="max-width:260px" value="${esc(U.invite)}"><button class="b" id="invsave">Enregistrer</button><span class="muted small">Vide = inscription libre</span></div>
+    <h3>Comptes (${U.users.length})</h3><table><tr><th>Identifiant</th><th>Nom</th><th>Lab</th><th></th></tr>
+    ${U.users.map(u => `<tr><td>${esc(u.username)}${u.role === 'admin' ? ' <span class="badge">admin</span>' : ''}</td><td>${esc(u.display_name)}</td>
+      <td>${u.lab ? esc(u.lab) + ' (n°' + u.slot + ')' + (u.status && u.status !== 'none' ? ' · ' + (STATUS[u.status] || u.status) : '') : '<span class="muted">—</span>'}</td><td class="row">
+      ${u.lab ? `<button class="b" data-un="${u.id}">Désinscrire</button>` : ''}<button class="b" data-rp="${u.id}">Réinit. mdp</button>
+      ${u.role !== 'admin' ? `<button class="b d" data-ud="${u.id}">Supprimer</button>` : ''}</td></tr>`).join('')}</table>`;
+  m.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { editing = L.labs.find(l => l.id == b.dataset.edit); render(); });
+  m.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { if (confirm('Supprimer ce lab et ses inscriptions ?')) act(() => api('/api/admin/labs/delete', {id: Number(b.dataset.del)}), 'Lab supprimé'); });
+  if ($('#cancel')) $('#cancel').onclick = () => { editing = null; render(); };
+  $('#lf').onsubmit = ev => { ev.preventDefault(); const f = ev.target, d = Object.fromEntries(new FormData(f)); d.active = f.active.checked; if (e.id) d.id = e.id;
+    act(async () => { await api('/api/admin/labs', d); editing = null; }, 'Lab enregistré'); };
+  $('#invsave').onclick = () => act(() => api('/api/admin/invite', {code: $('#inv').value}), 'Code enregistré');
+  m.querySelectorAll('[data-un]').forEach(b => b.onclick = () => act(() => api('/api/admin/unenroll', {user_id: Number(b.dataset.un)}), 'Étudiant désinscrit'));
+  m.querySelectorAll('[data-rp]').forEach(b => b.onclick = () => { const p = prompt('Nouveau mot de passe (8 caractères minimum) :'); if (p) act(() => api('/api/admin/reset-password', {user_id: Number(b.dataset.rp), password: p}), 'Mot de passe réinitialisé'); });
+  m.querySelectorAll('[data-ud]').forEach(b => b.onclick = () => { if (confirm('Supprimer ce compte ?')) act(() => api('/api/admin/users/delete', {user_id: Number(b.dataset.ud)}), 'Compte supprimé'); });
+}
+boot();
+</script></body></html>

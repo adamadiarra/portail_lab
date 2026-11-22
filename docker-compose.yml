@@ -1,0 +1,16 @@
+services:
+  portail:
+    build: .
+    restart: unless-stopped
+    ports: ["127.0.0.1:8000:8000"]   # exposer via un reverse proxy HTTPS (Caddy/Nginx)
+    environment:
+      ADMIN_PASSWORD: "changez-moi-12345"
+      INVITE_CODE: "code-des-etudiants"
+      COOKIE_SECURE: "1"             # à 1 uniquement derrière HTTPS
+      PUBLISH_ADDR: "0.0.0.0"        # interface où sont publiés les ports des labs étudiants
+    volumes:
+      - portail-data:/data
+      # Lancement des conteneurs des étudiants. ATTENTION : l'accès au socket Docker équivaut à root sur l'hôte.
+      - /var/run/docker.sock:/var/run/docker.sock
+volumes:
+  portail-data:
