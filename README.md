@@ -17,6 +17,7 @@ Onglet **Administration** : labs, code d'invitation, comptes.
 ## Lab avec conteneur
 Champs : image, ports `nom:port` (ex. `web:8080,modbus:5020`), mémoire, CPU, variables d'environnement.
 Port hôte de chaque port = **port de base + 1000 × rang + n° de place** (base 18000, place 3 : web 18003, modbus 19003).
+Dans le formulaire, **Vérifier** contrôle l'image (liste des images locales, téléchargement si absente, ports exposés suggérés).
 Variables (instructions, URL, env) : `{user}`, `{slot}`, `{port}` (premier port), `{port_<nom>}`.
 Chaque conteneur est limité (mémoire, CPU, 256 processus, `no-new-privileges`), redémarre avec la machine
 et les conteneurs orphelins sont nettoyés au démarrage du portail. Ouvrir les ports (pare-feu) correspondants.

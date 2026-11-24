@@ -54,6 +54,14 @@ try:
     x = S(); x.req("POST", "/api/register", {"username": "zoe", "password": "motdepasse1", "invite": "inv"}); x.req("POST", "/api/enroll", {"lab_id": lid2})
     e = wait(lambda: (lambda y: y if y["status"] == "error" else None)(x.req("GET", "/api/my-lab")[1]["lab"]), 40)
     ok(bool(e), f"image introuvable -> statut error ({e and e['detail']})")
+    # liste des images locales + vérification d'image
+    im = a.req("GET", "/api/admin/images")[1]; ok(im["docker"] and "labtest:1" in im["images"], f"liste des images locales : {im['images']}")
+    sc, j = a.req("POST", "/api/admin/images/check", {"image": "labtest:1"}); ok(sc == 200 and j["present"] and j["ports"] == [] and j["size_mb"] > 0, f"vérifier image présente : {j}")
+    sc, j = a.req("POST", "/api/admin/images/check", {"image": "inexistante-xyz:9"}); ok(sc == 200 and j["present"] is False, "image absente détectée sans téléchargement")
+    sc, j = a.req("POST", "/api/admin/images/check", {"image": "inexistante-xyz:9", "pull": True}); ok(sc == 404, f"téléchargement d'une image introuvable -> erreur claire ({j.get('error')})")
+    ok(a.req("POST", "/api/admin/images/check", {"image": "bad image;rm"})[0] == 400, "nom d'image invalide refusé")
+    ok(st["ana"].req("GET", "/api/admin/images")[0] == 403, "liste des images réservée à l'admin")
+    subprocess.run(["docker", "tag", "labtest:1", "labports:1"], capture_output=True)
     # suppression du lab -> conteneurs supprimés
     a.req("POST", "/api/admin/labs/delete", {"id": lid})
     ok(wait(lambda: containers() == []) is True, "suppression du lab : conteneurs supprimés")

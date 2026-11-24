@@ -12,7 +12,7 @@ Aucune dépendance : bibliothèque standard uniquement.
 """
 import argparse, hashlib, hmac, http.client, json, os, re, secrets, socket, sqlite3, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 DB_PATH = os.environ.get("DB_PATH", "portail.db")
 SESSION_TTL = 7 * 24 * 3600
@@ -80,6 +80,31 @@ def host_ports(lab, slot):
         return {n: lab["port_base"] + i * 1000 + slot for i, (n, _) in enumerate(parse_ports(lab["ports"]))}
     return {"": lab["port_base"] + slot} if lab["port_base"] else {}
 
+def _split_ref(ref):
+    """'nginx:1.27' -> ('nginx','1.27') ; 'reg:5000/app' -> ('reg:5000/app','latest') ; 'app@sha256:..' -> ('app@sha256:..','')"""
+    if "@" in ref: return ref, ""
+    last = ref.split("/")[-1]
+    if ":" in last: img, _, tag = ref.rpartition(":"); return img, tag
+    return ref, "latest"
+
+def inspect_image(ref):
+    """None si absente ; sinon {'size_mb', 'ports':[int], 'tags':[..]}."""
+    st, r = docker("GET", "/images/" + quote(ref, safe="/:@") + "/json", timeout=15)
+    if st == 404: return None
+    if st != 200: raise RuntimeError(r.get("message", f"Docker a refusé ({st})"))
+    ports = sorted({int(k.split("/")[0]) for k in ((r.get("Config") or {}).get("ExposedPorts") or {}) if k.endswith("/tcp")})
+    return {"size_mb": round((r.get("Size") or 0) / 1e6), "ports": ports, "tags": r.get("RepoTags") or []}
+
+def pull_image(ref):
+    img, tag = _split_ref(ref)
+    q = "fromImage=" + quote(img, safe="/:@") + ("&tag=" + quote(tag) if tag else "")
+    st, r = docker("POST", "/images/create?" + q, timeout=900)
+    if st != 200: raise RuntimeError(r.get("message", f"Image introuvable : {ref}"))
+    # l'API répond 200 même si le téléchargement échoue en cours de flux : on revérifie
+    info = inspect_image(ref)
+    if info is None: raise RuntimeError(f"Image introuvable (ou accès refusé) : {ref}")
+    return info
+
 def remove_container(name):
     try: docker("DELETE", f"/containers/{name}?force=true&v=true", timeout=30)
     except Exception as e: print("[portail] suppression conteneur :", name, repr(e), flush=True)
@@ -112,9 +137,7 @@ def start_lab_container(eid):
         remove_container(name)
         st, r = docker("POST", f"/containers/create?name={name}", body, timeout=60)
         if st == 404:  # image absente : téléchargement puis nouvel essai
-            img, _, tag = lab["image"].rpartition(":") if ":" in lab["image"].split("/")[-1] else (lab["image"], "", "latest")
-            ps, pr = docker("POST", f"/images/create?fromImage={img}&tag={tag}", timeout=600)
-            if ps != 200: raise RuntimeError(f"Image introuvable : {lab['image']}")
+            pull_image(lab["image"])
             st, r = docker("POST", f"/containers/create?name={name}", body, timeout=60)
         if st != 201: raise RuntimeError(r.get("message", f"création refusée ({st})"))
         st, r = docker("POST", f"/containers/{name}/start", timeout=60)
@@ -437,6 +460,28 @@ def r_a_lab_delete(h, c, u, b):
     drop_containers(c.execute("SELECT lab_id,user_id FROM enrollments WHERE lab_id=?", (lid,)).fetchall())
     c.execute("DELETE FROM labs WHERE id=?", (lid,)); return {"ok": True}
 
+def r_a_images(h, c, u, b):
+    if not docker_ok(): return {"docker": False, "images": []}
+    st, lst = docker("GET", "/images/json", timeout=15)
+    tags = sorted({t for im in (lst if isinstance(lst, list) else []) for t in (im.get("RepoTags") or []) if t != "<none>:<none>"})
+    return {"docker": True, "images": tags}
+
+def r_a_image_check(h, c, u, b):
+    ref = need(b, "image", 200)
+    if not IMAGE_RE.match(ref): raise ApiError(400, "Nom d'image Docker invalide")
+    if not docker_ok(): raise ApiError(409, "Docker est inaccessible depuis le portail (socket non monté ?)")
+    try:
+        info, pulled = inspect_image(ref), False
+        if info is None:
+            if not b.get("pull"): return {"present": False}
+            info, pulled = pull_image(ref), True
+    except RuntimeError as ex:
+        raise ApiError(404, str(ex))
+    WEB = (8080, 80, 8088, 1880, 3000, 8000, 5000, 443, 8443)  # ports web courants : nommé « web » en priorité
+    ordered = sorted(info["ports"], key=lambda x: (WEB.index(x) if x in WEB else len(WEB), x))
+    sugg = ",".join(("web" if i == 0 else f"p{p}") + f":{p}" for i, p in enumerate(ordered))
+    return {"present": True, "pulled": pulled, "size_mb": info["size_mb"], "ports": info["ports"], "suggested_ports": sugg}
+
 def r_a_students(h, c, u, b):
     rows = c.execute("""SELECT u.id,u.username,u.display_name,u.role,l.title AS lab,e.slot,e.status FROM users u
         LEFT JOIN enrollments e ON e.user_id=u.id LEFT JOIN labs l ON l.id=e.lab_id ORDER BY u.username""").fetchall()
@@ -478,6 +523,7 @@ ROUTES = {
     ("POST", "/api/password"): (False, False, r_password),
     ("GET", "/api/admin/labs"): (False, True, r_a_labs), ("POST", "/api/admin/labs"): (False, True, r_a_lab_save),
     ("POST", "/api/admin/labs/delete"): (False, True, r_a_lab_delete), ("GET", "/api/admin/users"): (False, True, r_a_students),
+    ("GET", "/api/admin/images"): (False, True, r_a_images), ("POST", "/api/admin/images/check"): (False, True, r_a_image_check),
     ("POST", "/api/admin/unenroll"): (False, True, r_a_unenroll), ("POST", "/api/admin/reset-password"): (False, True, r_a_reset),
     ("POST", "/api/admin/users/delete"): (False, True, r_a_user_delete), ("POST", "/api/admin/invite"): (False, True, r_a_invite),
 }
