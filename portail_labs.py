@@ -409,7 +409,7 @@ def r_mylab(h, c, u, b):
     if not e: return {"lab": None}
     lab = c.execute("SELECT * FROM labs WHERE id=?", (e["lab_id"],)).fetchone()
     hp = host_ports(lab, e["slot"])
-    return {"lab": {"title": lab["title"], "description": lab["description"], "slot": e["slot"],
+    return {"lab": {"id": lab["id"], "title": lab["title"], "description": lab["description"], "slot": e["slot"],
                     "access_url": render(lab["access_url"], u["username"], e["slot"], hp),
                     "host": lab["host"], "ports": [{"name": n, "port": v} for n, v in hp.items()],
                     "managed": bool(lab["image"]), "status": e["status"], "detail": e["detail"],

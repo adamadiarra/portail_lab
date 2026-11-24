@@ -2,31 +2,50 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Portail des labs</title>
 <style>
-:root{--bg:#f4f6f9;--card:#fff;--ink:#1c2733;--muted:#667487;--line:#dce2ea;--accent:#1a5fb4;--on:#fff;--ok:#1e8e4e;--bad:#c0392b;--warn:#b9770e;--input:#fff}
-@media (prefers-color-scheme:dark){:root{--bg:#12161c;--card:#1b222b;--ink:#e6ebf1;--muted:#8d9bab;--line:#2b3542;--accent:#5b9bf0;--on:#0b1118;--ok:#4cc784;--bad:#ef7a6b;--warn:#e0a948;--input:#141a21}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line);flex-wrap:wrap}
-h1{font-size:18px;margin:0}h2{font-size:17px;margin:0 0 12px}h3{font-size:13px;margin:22px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.sp{flex:1}nav{display:flex;gap:4px;padding:0 20px;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto}
-nav button{border:0;background:none;color:var(--muted);padding:11px 14px;font:inherit;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
-nav button.on{color:var(--ink);font-weight:600;border-color:var(--accent)}
-main{max-width:1000px;margin:0 auto;padding:20px 16px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-.card.mine{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok)}
+:root{--bg:#eef3f9;--card:#fff;--ink:#1d2a3a;--muted:#6a7a8d;--line:#dde5ee;--blue:#1477d1;--blue-d:#0d5aa7;--accent:#1477d1;--on:#fff;--ok:#1f9d4d;--bad:#d6402f;--warn:#c27a00;--input:#fff;--soft:#f5f8fc;--shadow:0 2px 0 rgba(20,60,110,.06),0 8px 24px rgba(20,60,110,.08)}
+@media (prefers-color-scheme:dark){:root{--bg:#10161e;--card:#1a232e;--ink:#e8eef5;--muted:#93a3b6;--line:#2a3745;--blue:#4aa3f0;--blue-d:#2f86d4;--accent:#4aa3f0;--on:#08121c;--ok:#52d08a;--bad:#f2806f;--warn:#e8b252;--input:#131b24;--soft:#16202b;--shadow:0 2px 0 rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.3)}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 ui-rounded,"Nunito","Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:10px 24px;background:var(--card);box-shadow:0 1px 0 var(--line);flex-wrap:wrap;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+.logo{display:grid;grid-template-columns:1fr 1fr;gap:3px;width:30px;height:30px}.logo i{border-radius:7px}
+.logo i:nth-child(1){background:#1477d1}.logo i:nth-child(2){background:#ff8f1f;border-radius:50%}.logo i:nth-child(3){background:#2fb344;border-radius:50% 7px 7px 7px}.logo i:nth-child(4){background:#e8467c}
+h1{font-size:20px;margin:0}h2{font-size:22px;font-weight:800;margin:0 0 6px;letter-spacing:-.01em}h3{font-size:12px;margin:24px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.sp{flex:1}.who{display:flex;align-items:center;gap:8px;font-weight:700}.av{width:34px;height:34px;border-radius:50%;background:#ff8f1f;color:#fff;display:grid;place-items:center;font-weight:800}
+nav{display:flex;gap:6px;padding:12px 24px 0;overflow-x:auto;max-width:1100px;margin:0 auto}
+nav button{border:0;background:transparent;color:var(--muted);padding:9px 18px;font:inherit;font-weight:700;cursor:pointer;border-radius:999px;white-space:nowrap}
+nav button:hover{background:var(--card)}nav button.on{background:var(--blue);color:var(--on)}
+main{max-width:1100px;margin:0 auto;padding:18px 24px 40px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:22px}
+.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+.lc{background:var(--card);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;position:relative}
+.lc:hover{transform:translateY(-3px)}.lc.mine{outline:3px solid var(--ok)}
+.thumb{height:128px;display:grid;place-items:center;position:relative;overflow:hidden}
+.thumb:before,.thumb:after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.18)}.thumb:before{width:150px;height:150px;left:-40px;top:-60px}.thumb:after{width:110px;height:110px;right:-30px;bottom:-50px}
+.thumb span{font-size:58px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.12));position:relative;z-index:1}
+.ribbon{position:absolute;top:12px;right:12px;background:var(--ok);color:#fff;font-weight:800;font-size:12px;padding:4px 12px;border-radius:999px;z-index:2}
+.lb{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}.lb .t{font-size:17px;font-weight:800;line-height:1.25}
 .muted{color:var(--muted)}.small{font-size:13px}
-button.b,a.b{display:inline-block;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;text-decoration:none}
-button.p,a.p{background:var(--accent);color:var(--on);border-color:var(--accent)}button.d{color:var(--bad)}button:disabled{opacity:.5;cursor:not-allowed}
-input,textarea,select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--input);color:var(--ink);font:inherit}
-label{display:block;margin:10px 0 4px;font-size:13px;color:var(--muted)}label.c{display:flex;gap:8px;align-items:center}label.c input{width:auto}
-.auth{max-width:380px;margin:50px auto}.tabs2{display:flex;gap:8px;margin-bottom:12px}
-.msg{margin:10px 0;padding:9px 12px;border-radius:8px;font-size:14px}.msg.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.msg.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
-.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line)}.badge.ok{color:var(--ok);border-color:var(--ok)}.badge.full{color:var(--bad);border-color:var(--bad)}
-.bar{height:6px;background:var(--line);border-radius:4px;margin:10px 0}.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
-pre.ins{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
-.kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:12px 0}.kv b{color:var(--muted);font-weight:500}
-table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.two{grid-template-columns:1fr}}
+button.b,a.b{display:inline-block;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:8px 16px;border-radius:12px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;transition:transform .08s,background .1s}
+button.b:hover:not(:disabled),a.b:hover{background:var(--soft)}button.b:active:not(:disabled){transform:translateY(1px)}
+button.p,a.p{background:var(--blue);color:var(--on);border-color:var(--blue);box-shadow:0 3px 0 var(--blue-d)}button.p:hover:not(:disabled),a.p:hover{background:var(--blue-d)}
+button.d{color:var(--bad)}button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+input,textarea,select{width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:var(--input);color:var(--ink);font:inherit}
+input:focus,textarea:focus{outline:none;border-color:var(--blue)}
+label{display:block;margin:12px 0 5px;font-size:13px;color:var(--muted);font-weight:700}label.c{display:flex;gap:8px;align-items:center}label.c input{width:auto}
+.auth{max-width:420px;margin:44px auto;padding:28px}.auth .brand{justify-content:center;margin-bottom:4px}.auth p.lead{text-align:center;margin:0 0 16px}
+.seg{display:flex;gap:6px;background:var(--soft);padding:5px;border-radius:999px;margin-bottom:12px}.seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:8px;border-radius:999px;font:inherit;font-weight:800;cursor:pointer}.seg button.on{background:var(--blue);color:var(--on)}
+.msg{margin:10px 0;padding:11px 14px;border-radius:14px;font-size:14px;font-weight:600}.msg.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.msg.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:800;background:var(--soft);color:var(--muted)}.badge.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}.badge.full{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.badge.wait{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.bar{height:8px;background:var(--soft);border-radius:99px;margin:8px 0 2px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px}
+pre.ins{white-space:pre-wrap;background:var(--soft);border-radius:14px;padding:14px 16px;font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;margin:0}
+.hero{border-radius:18px;padding:26px 28px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.14);right:-50px;top:-70px}
+.hero .em{font-size:64px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.15));position:relative;z-index:1}.hero h2{color:#fff;margin:0}.hero p{margin:4px 0 0;opacity:.92}.hero .badge{background:rgba(255,255,255,.25);color:#fff}
+.conn{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:14px 0}
+.chip{background:var(--soft);border-radius:14px;padding:11px 14px;display:flex;align-items:center;gap:10px}.chip small{display:block;color:var(--muted);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em}.chip code{font:700 15px ui-monospace,Menlo,Consolas,monospace;word-break:break-all}.chip .cp{margin-left:auto;border:0;background:var(--card);border-radius:9px;padding:5px 9px;cursor:pointer;font-size:14px}
+td .b{padding:5px 11px;font-size:13px;border-radius:10px;border-width:1px}td.row{flex-wrap:nowrap}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.07em}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:560px){.two{grid-template-columns:1fr}header,main{padding-left:14px;padding-right:14px}.hero .em{font-size:46px}}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -39,6 +58,14 @@ async function api(path, body) {
   return j;
 }
 let me = null, view = 'labs', flash = null;
+const PAL = [['#1477d1', '#4db3ff'], ['#ff8f1f', '#ffc266'], ['#2fb344', '#7fe08f'], ['#8a4fff', '#c0a0ff'], ['#e8467c', '#ff9fbf'], ['#12b5cb', '#7be3f0']];
+const grad = id => { const c = PAL[Math.abs(id) % PAL.length]; return `linear-gradient(135deg,${c[0]},${c[1]})`; };
+const solid = id => PAL[Math.abs(id) % PAL.length][0];
+function icon(t) { t = (t || '').toLowerCase();
+  const m = [[/onduleur|solaire|photovolta|pv\b|sun2000/, '☀️'], [/node-?red|flux|passerelle/, '🔀'], [/mqtt|iot|capteur|esp32/, '📡'], [/simlab|énergie|energie|groupe|générateur|electri|électri/, '⚡'],
+             [/automate|plc|openplc|ignition|scada/, '🏭'], [/robot/, '🤖'], [/lora/, '📶'], [/modbus|opc/, '🔌']];
+  for (const [r, e] of m) if (r.test(t)) return e; return '🧪'; }
+const initial = n => (n || '?').trim().charAt(0).toUpperCase();
 const setFlash = (t, kind = 'ok') => { flash = {t, kind}; };
 const flashHtml = () => { if (!flash) return ''; const f = flash; flash = null; return `<div class="msg ${f.kind}">${esc(f.t)}</div>`; };
 async function act(fn, okMsg) { try { await fn(); if (okMsg) setFlash(okMsg); } catch (e) { if (e.status === 401) me = null; else setFlash(e.message, 'err'); } render(); }
@@ -48,7 +75,7 @@ async function render() {
   const app = $('#app');
   if (!me) return renderAuth(app);
   const tabs = [['labs', 'Labs'], ['mylab', 'Mon lab']].concat(me.role === 'admin' ? [['admin', 'Administration']] : []);
-  app.innerHTML = `<header><h1>Portail des labs</h1><div class="sp"></div><span class="muted small">${esc(me.display_name)}${me.role === 'admin' ? ' (admin)' : ''}</span>
+  app.innerHTML = `<header><div class="brand"><div class="logo"><i></i><i></i><i></i><i></i></div>Portail des labs</div><div class="sp"></div><span class="who"><span class="av">${esc(initial(me.display_name))}</span><span class="small">${esc(me.display_name)}${me.role === 'admin' ? ' · admin' : ''}</span></span>
     <button class="b" id="pwbtn">Mot de passe</button><button class="b" id="logout">Déconnexion</button></header>
     <nav>${tabs.map(([k, l]) => `<button data-v="${k}" class="${view === k ? 'on' : ''}">${l}</button>`).join('')}</nav><main id="main"></main>`;
   app.querySelectorAll('nav button').forEach(b => b.onclick = () => { view = b.dataset.v; render(); });
@@ -65,14 +92,15 @@ function changePw() {
 }
 function renderAuth(app) {
   const reg = app.dataset.mode === 'reg';
-  app.innerHTML = `<div class="auth card"><h2>Portail des labs</h2>
-    <div class="tabs2"><button class="b ${!reg ? 'p' : ''}" id="t-log">Connexion</button><button class="b ${reg ? 'p' : ''}" id="t-reg">Inscription</button></div>
+  app.innerHTML = `<div class="auth card"><div class="brand"><div class="logo"><i></i><i></i><i></i><i></i></div>Portail des labs</div>
+    <p class="lead muted">${reg ? 'Créez votre compte pour accéder aux labs.' : 'Connectez-vous pour retrouver vos labs.'}</p>
+    <div class="seg"><button class="${!reg ? 'on' : ''}" id="t-log">Connexion</button><button class="${reg ? 'on' : ''}" id="t-reg">Inscription</button></div>
     <div id="amsg">${flashHtml()}</div>
     <form id="f"><label>Identifiant</label><input name="username" autocomplete="username" required>
     ${reg ? '<label>Nom affiché (facultatif)</label><input name="display_name">' : ''}
     <label>Mot de passe${reg ? ' (8 caractères minimum)' : ''}</label><input type="password" name="password" autocomplete="${reg ? 'new-password' : 'current-password'}" required>
     ${reg ? '<label>Code d\'invitation</label><input name="invite" autocomplete="off">' : ''}
-    <div style="margin-top:14px"><button class="b p" style="width:100%">${reg ? 'Créer mon compte' : 'Se connecter'}</button></div></form></div>`;
+    <div style="margin-top:14px"><button class="b p" style="width:100%;padding:11px">${reg ? 'Créer mon compte' : 'Se connecter'}</button></div></form></div>`;
   $('#t-log').onclick = () => { app.dataset.mode = ''; renderAuth(app); };
   $('#t-reg').onclick = () => { app.dataset.mode = 'reg'; renderAuth(app); };
   $('#f').onsubmit = async ev => {
@@ -83,29 +111,34 @@ function renderAuth(app) {
 }
 async function viewLabs(m) {
   const r = await api('/api/labs'), enrolled = r.enrolled_lab_id;
-  m.innerHTML = flashHtml() + `<h2>Labs disponibles</h2>
-    ${enrolled ? '<div class="msg ok">Vous êtes inscrit à un lab. Pour en choisir un autre, quittez d\'abord le vôtre.</div>' : '<p class="muted">Vous ne pouvez être inscrit qu\'à <b>un seul lab à la fois</b>.</p>'}
-    <div class="grid">${r.labs.map(l => `<div class="card ${l.mine ? 'mine' : ''}"><div class="row"><b>${esc(l.title)}</b><span class="sp"></span>
-      <span class="badge ${l.free ? 'ok' : 'full'}">${l.free ? l.free + ' place' + (l.free > 1 ? 's' : '') : 'Complet'}</span></div>
-      <p class="muted small">${esc(l.description) || 'Pas de description.'}</p>
-      <div class="bar"><i style="width:${Math.round(100 * l.taken / l.capacity)}%"></i></div><div class="small muted">${l.taken} / ${l.capacity} inscrits</div>
-      <div style="margin-top:12px">${l.mine ? `<button class="b p" data-go>Accéder à mon lab</button> <button class="b d" data-leave>Quitter</button>`
-        : `<button class="b p" data-enroll="${l.id}" ${enrolled || !l.free ? 'disabled' : ''}>S'inscrire</button>`}</div></div>`).join('') || '<p class="muted">Aucun lab pour le moment.</p>'}</div>`;
+  m.innerHTML = flashHtml() + `<h2>Choisissez votre lab</h2>
+    ${enrolled ? '<div class="msg ok">Vous êtes inscrit à un lab. Pour en choisir un autre, quittez d\'abord le vôtre.</div>' : '<p class="muted" style="margin:0 0 18px">Vous ne pouvez être inscrit qu\'à <b>un seul lab à la fois</b>.</p>'}
+    <div class="grid">${r.labs.map(l => { const pct = Math.round(100 * l.taken / l.capacity); return `<div class="lc ${l.mine ? 'mine' : ''}">
+      <div class="thumb" style="background:${grad(l.id)}"><span>${icon(l.title)}</span></div>${l.mine ? '<div class="ribbon">Mon lab ✓</div>' : ''}
+      <div class="lb"><div class="t">${esc(l.title)}</div>
+      <div class="muted small" style="flex:1">${esc(l.description) || 'Pas de description.'}</div>
+      <div class="bar"><i style="width:${pct}%;background:${solid(l.id)}"></i></div>
+      <div class="row small"><span class="muted">${l.taken} / ${l.capacity} inscrits</span><span class="sp"></span><span class="badge ${l.free ? 'ok' : 'full'}">${l.free ? l.free + ' place' + (l.free > 1 ? 's' : '') + ' libre' + (l.free > 1 ? 's' : '') : 'Complet'}</span></div>
+      <div style="margin-top:10px" class="row">${l.mine ? `<button class="b p" data-go>Accéder à mon lab</button><button class="b d" data-leave>Quitter</button>`
+        : `<button class="b p" data-enroll="${l.id}" ${enrolled || !l.free ? 'disabled' : ''}>S'inscrire</button>`}</div></div></div>`; }).join('') || '<p class="muted">Aucun lab pour le moment.</p>'}</div>`;
   m.querySelectorAll('[data-enroll]').forEach(b => b.onclick = () => act(async () => { await api('/api/enroll', {lab_id: Number(b.dataset.enroll)}); view = 'mylab'; }, 'Inscription enregistrée'));
   m.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { view = 'mylab'; render(); });
   m.querySelectorAll('[data-leave]').forEach(b => b.onclick = () => { if (confirm('Quitter ce lab ? Votre place sera libérée.')) act(() => api('/api/unenroll', {}), 'Vous avez quitté le lab'); });
 }
 async function viewMyLab(m) {
-  const l = (await api('/api/my-lab')).lab;
-  if (!l) { m.innerHTML = flashHtml() + `<div class="card"><h2>Mon lab</h2><p class="muted">Vous n'êtes inscrit à aucun lab.</p><button class="b p" id="gl">Voir les labs</button></div>`; $('#gl').onclick = () => { view = 'labs'; render(); }; return; }
+  const d = await api('/api/my-lab'), l = d.lab;
+  if (!l) { m.innerHTML = flashHtml() + `<div class="card" style="text-align:center;padding:40px"><div style="font-size:56px">🧪</div><h2>Vous n'avez pas encore de lab</h2><p class="muted">Choisissez-en un pour commencer.</p><button class="b p" id="gl">Voir les labs</button></div>`; $('#gl').onclick = () => { view = 'labs'; render(); }; return; }
   const link = /^https?:\/\//.test(l.access_url) ? `<a class="b p" href="${esc(l.access_url)}" target="_blank" rel="noopener noreferrer">Ouvrir le lab ↗</a>` : '';
-  m.innerHTML = flashHtml() + `<div class="card"><div class="row"><h2 style="margin:0">${esc(l.title)}</h2><span class="sp"></span><span class="badge ok">Inscrit</span></div>
-    <p class="muted">${esc(l.description)}</p>
-    <div class="kv"><b>Votre place</b><span>n° ${l.slot}</span>${l.host ? `<b>Hôte</b><span><code>${esc(l.host)}</code></span>` : ''}
-    ${l.managed ? `<b>État</b><span><span class="badge ${l.status === 'running' ? 'ok' : l.status === 'starting' ? '' : 'full'}">${STATUS[l.status] || esc(l.status)}</span>${l.detail ? ` <span class="muted small">${esc(l.detail)}</span>` : ''}</span>` : ''}
-    ${l.ports.map(p => `<b>Port${p.name ? ' ' + esc(p.name) : ''}</b><span><code>${p.port}</code></span>`).join('')}${l.access_url ? `<b>Adresse</b><span><code>${esc(l.access_url)}</code></span>` : ''}</div>
-    <div class="row">${l.status === 'running' || !l.managed ? link : ''}${l.managed ? '<button class="b" id="restart">Redémarrer mon lab</button>' : ''}<button class="b d" id="leave">Quitter ce lab</button></div>
-    ${l.instructions ? `<h3>Instructions</h3><pre class="ins">${esc(l.instructions)}</pre>` : ''}</div>`;
+  const cls = l.status === 'running' ? 'ok' : l.status === 'starting' ? 'wait' : 'full';
+  const chip = (lab, val) => `<div class="chip"><div><small>${esc(lab)}</small><code>${esc(val)}</code></div><button class="cp" data-copy="${esc(val)}" title="Copier">📋</button></div>`;
+  m.innerHTML = flashHtml() + `<div class="hero" style="background:${grad(l.id)}"><div class="em">${icon(l.title)}</div>
+    <div style="flex:1;min-width:200px"><h2>${esc(l.title)}</h2><p>${esc(l.description)}</p></div>
+    <div class="row"><span class="badge">Place n° ${l.slot}</span>${l.managed ? `<span class="badge" style="background:#fff;color:${l.status === 'running' ? '#1f9d4d' : l.status === 'starting' ? '#c27a00' : '#d6402f'}">${STATUS[l.status] || esc(l.status)}</span>` : ''}</div></div>
+    ${l.detail ? `<div class="msg err" style="margin-top:14px">${esc(l.detail)}</div>` : ''}
+    <h3>Connexion</h3><div class="conn">${l.host ? chip('Hôte', l.host) : ''}${l.ports.map(p => chip('Port' + (p.name ? ' ' + p.name : ''), String(p.port))).join('')}${l.access_url ? chip('Adresse', l.access_url) : ''}</div>
+    <div class="row">${l.status === 'running' || !l.managed ? link : ''}${l.managed ? '<button class="b" id="restart">↻ Redémarrer mon lab</button>' : ''}<button class="b d" id="leave">Quitter ce lab</button></div>
+    ${l.instructions ? `<h3>Instructions</h3><pre class="ins">${esc(l.instructions)}</pre>` : ''}`;
+  m.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = '✓'; setTimeout(() => b.textContent = '📋', 1200); } catch (e) { prompt('Copiez :', b.dataset.copy); } });
   if ($('#restart')) $('#restart').onclick = () => act(() => api('/api/my-lab/restart', {}), 'Redémarrage en cours…');
   if (l.status === 'starting') setTimeout(() => { if (view === 'mylab' && me) render(); }, 2000);
   $('#leave').onclick = () => { if (confirm('Quitter ce lab ? Votre place sera libérée.')) act(async () => { await api('/api/unenroll', {}); view = 'labs'; }, 'Vous avez quitté le lab'); };
